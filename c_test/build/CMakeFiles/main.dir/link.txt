@@ -1,0 +1,1 @@
+/usr/bin/cc    CMakeFiles/main.dir/main.c.o  -o main  /home/ds3a/dev/state_estimation/target/debug/libstate_estimation.a 

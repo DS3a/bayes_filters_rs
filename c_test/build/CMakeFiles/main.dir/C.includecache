@@ -1,0 +1,14 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/kalman_filter.h
+
+/home/ds3a/dev/state_estimation/c_test/main.c
+kalman_filter.h
+/home/ds3a/dev/state_estimation/c_test/kalman_filter.h
+

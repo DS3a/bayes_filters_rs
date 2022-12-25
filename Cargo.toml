@@ -10,4 +10,4 @@ nalgebra = "0.31.4"
 
 [lib]
 name = "state_estimation"
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
