@@ -1,5 +1,5 @@
 [package]
-name = "state_estimation"
+name = "bayes_filters"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,5 @@ edition = "2021"
 nalgebra = "0.31.4"
 
 [lib]
-name = "state_estimation"
+name = "bayes_filters"
 crate-type = ["cdylib", "staticlib"]
