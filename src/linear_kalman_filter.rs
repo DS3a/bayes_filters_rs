@@ -168,7 +168,8 @@ impl LinearKalmanFilter {
     }
 
     pub fn measure(&self) {
-        // TODO add measurement equation
+        // TODO add update equations
+        // use josephs equation for process noise covariance
     }
 
     pub fn start_filter(&self /*initial conditions*/) {
