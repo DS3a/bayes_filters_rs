@@ -11,8 +11,7 @@ extern "C" fn init_linear_kalman_filter() -> *mut linear_kalman_filter::LinearKa
 */
 #[no_mangle]
 extern "C" fn linear_kalman_predict(kf: *mut linear_kalman_filter::LinearKalmanFilter) {
-  unsafe {
-    (&mut *kf).predict(None, None);
-  }
+    unsafe {
+        (&mut *kf).predict(None);
+    }
 }
-
