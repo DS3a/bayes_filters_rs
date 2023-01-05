@@ -29,14 +29,17 @@ impl LinearKalmanFilter {
     }
   }
 
-  pub fn set_transition_matrix() {
-
+  pub fn set_transition_matrix(&mut self, new_transition_matrix: DMatrix<f64>) {
+    if (new_transition_matrix.shape().0 == self.state_vector_length) &&
+       (new_transition_matrix.shape().1 == self.state_vector_length) {
+      *(self.transition_matrix.lock().unwrap()) = new_transition_matrix;
+    }
   }
 
   pub fn predict(&self, input: Option<f64>, input_covariance: Option<f64>) {
     let mut state_vector_lock = &*(self.state_vector.lock().unwrap());
     let mut transition_matrix_lock = &*(self.transition_matrix.lock().unwrap());
-    let binding = (transition_matrix_lock * state_vector_lock);
+    let binding = transition_matrix_lock * state_vector_lock;
     state_vector_lock = &binding;
 
 /*    if let Some(input) = input {
