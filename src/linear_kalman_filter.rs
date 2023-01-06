@@ -2,6 +2,7 @@ use nalgebra::{DMatrix, DVector};
 use std::mem::drop;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::Duration;
 
 pub use crate::linear_kalman_filter_c_bindings;
 
@@ -172,10 +173,12 @@ impl LinearKalmanFilter {
         // use josephs equation for process noise covariance
     }
 
-    pub fn start_filter(&self /*initial conditions*/) {
+    pub fn start_filter(&'static self /*initial conditions*/) {
         thread::spawn(move || {
             // start loop
             loop {
+                self.predict(None);
+                thread::sleep(Duration::from_nanos(((1f64/(self.update_rate as f64)) as u64) * 10^9));
                 // use the predict function
                 // wait for 1/update_rate seconds
             }
