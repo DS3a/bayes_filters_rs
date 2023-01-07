@@ -168,9 +168,20 @@ impl LinearKalmanFilter {
         println!("{:?}", &x_mut);
     }
 
-    pub fn measure(&self) {
-        // TODO add update equations
-        // use josephs equation for process noise covariance
+    pub fn measure(&self, measurement: DMatrix<f64>) -> Result<(), &str> {
+        if measurement.shape() == (self.num_measurements, self.state_vector_length) {
+            let h_lock: &DMatrix<f64>  = &(self.measurement_matrix.lock().unwrap());
+            let x_mut: &mut DVector<f64> = &mut (self.state_vector.lock().unwrap());
+            let estimated_measurement = h_lock * &(*x_mut);
+            let innovation = measurement - estimated_measurement;
+            assert_eq!(innovation.shape(), (self.num_measurements, self.state_vector_length));
+            // TODO calculate kalman gain
+            // TODO update state vector from innovation matrix
+            // TODO update covariance using josephs equation
+            Ok(())
+        } else {
+            Err("The measurement has an invalid shape")
+        }
     }
 
     pub fn start_filter(&'static self /*initial conditions*/) {
@@ -187,9 +198,6 @@ impl LinearKalmanFilter {
 }
 
 /*
- * ensure update_rate is higher than 0 /////done
- * TODO start_kf function, which updates irrespective of input or measurements
- *
  *
  * measure functions
  *
@@ -214,5 +222,10 @@ mod tests {
         assert_eq!(transition_matrix_shape, (3, 3));
         assert_eq!(measurement_matrix_shape, (1, 3));
         assert_eq!(measurement_noise_matrix_shape, (1, 1));
+    }
+
+    #[test]
+    fn test_predict() {
+        let lkf = LinearKalmanFilter::new(250u64, 3usize, 1usize, 1usize);
     }
 }
