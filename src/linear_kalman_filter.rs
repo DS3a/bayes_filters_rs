@@ -6,20 +6,24 @@ use std::time::Duration;
 
 pub use crate::linear_kalman_filter_c_bindings;
 
+type DynTsMatrix = Arc<Mutex<DMatrix<f64>>>;
+type DynTsVector = Arc<Mutex<DVector<f64>>>;
+// DynTs = Dynamic Threadsafe
+
 pub struct LinearKalmanFilter {
     state_vector_length: usize,
     num_inputs: usize,
     num_measurements: usize,
 
-    state_vector: Arc<Mutex<DVector<f64>>>,
-    state_covariance: Arc<Mutex<DMatrix<f64>>>,
+    state_vector: DynTsVector,
+    state_covariance: DynTsMatrix,
 
-    transition_matrix: Arc<Mutex<DMatrix<f64>>>, // the F matrix
-    input_matrix: Arc<Mutex<DMatrix<f64>>>,      // the G matrix
-    process_noise_matrix: Arc<Mutex<DMatrix<f64>>>, // Q matrix
+    transition_matrix: DynTsMatrix, // the F matrix
+    input_matrix: DynTsMatrix, // the G matrix
+    process_noise_matrix: DynTsMatrix, // Q matrix
 
-    measurement_matrix: Arc<Mutex<DMatrix<f64>>>, // the H matrix
-    measurement_noise_matrix: Arc<Mutex<DMatrix<f64>>>, // R matrix
+    measurement_matrix: DynTsMatrix, // the H matrix
+    measurement_noise_matrix: DynTsMatrix, // R matrix
 
     update_rate: u64,
 }
@@ -170,28 +174,31 @@ impl LinearKalmanFilter {
 
     pub fn measure(&self, measurement: DMatrix<f64>) -> Result<(), &str> {
         if measurement.shape() == (self.num_measurements, self.state_vector_length) {
-            let h_lock: &DMatrix<f64>  = &(self.measurement_matrix.lock().unwrap());
-            let x_mut: &mut DVector<f64> = &mut (self.state_vector.lock().unwrap());
+            let h_lock: &DMatrix<f64> = &(self.measurement_matrix.lock().unwrap());
+            let r_lock: &DMatrix<f64> = &(self.measurement_noise_matrix.lock().unwrap());
+            let x_mut: &mut DVector<f64> = &mut(self.state_vector.lock().unwrap());
+            let p_mut: &mut DMatrix<f64> = &mut(self.state_covariance.lock().unwrap());
+
             let estimated_measurement = h_lock * &(*x_mut);
             let innovation = measurement - estimated_measurement;
+            let k = ( &(*p_mut) * h_lock.transpose()) * (h_lock * &(*p_mut) * h_lock.transpose() + r_lock).try_inverse().unwrap();
             assert_eq!(innovation.shape(), (self.num_measurements, self.state_vector_length));
-            // TODO calculate kalman gain
-            // TODO update state vector from innovation matrix
-            // TODO update covariance using josephs equation
+
+            let I = DMatrix::<f64>::identity(self.state_vector_length, self.state_vector_length);
+            *x_mut = &(*x_mut) + (&k * &innovation);
+            *p_mut = (&I - (&k * h_lock)) * &(*p_mut) * (&I - (&k * h_lock)).transpose() + &k * r_lock * &k.transpose();
             Ok(())
         } else {
             Err("The measurement has an invalid shape")
         }
     }
 
-    pub fn start_filter(&'static self /*initial conditions*/) {
+    pub fn start_filter(&'static self /*TODO accept initial conditions*/) {
         thread::spawn(move || {
             // start loop
             loop {
                 self.predict(None);
                 thread::sleep(Duration::from_nanos(((1f64/(self.update_rate as f64)) as u64) * 10^9));
-                // use the predict function
-                // wait for 1/update_rate seconds
             }
         });
     }
